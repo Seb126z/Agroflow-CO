@@ -1,0 +1,24 @@
+# Alternativa a PostgreSQL nativo, para equipos donde Docker Desktop sí
+# tiene su motor corriendo. En esta sesión de desarrollo WSL2 no estaba
+# disponible y se optó por instalar PostgreSQL nativo (ver README.md).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: agroflow-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agroflow}
+      POSTGRES_USER: ${POSTGRES_USER:-agroflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agroflow_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - agroflow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-agroflow} -d $${POSTGRES_DB:-agroflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  agroflow_pgdata:

@@ -1,0 +1,386 @@
+:root {
+  --red: #D7263D;
+  --red-dark: #AD1D30;
+  --red-soft: #FDEBEE;
+  --ink: #1F2328;
+  --ink-soft: #5B6168;
+  --line: #E7E9EC;
+  --bg: #FFFFFF;
+  --bg-alt: #FAFAFB;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(20, 20, 20, 0.04), 0 6px 20px rgba(20, 20, 20, 0.06);
+}
+
+* { box-sizing: border-box; }
+
+/* Varios elementos (.overlay, .no-data, .charts-loader, .page-loader) fijan
+   su propio `display` para poder mostrarse como flexbox centrado. Sin esta
+   regla, ese `display` de autor le gana al `[hidden] { display: none }` que
+   trae el navegador por defecto (el origen "author" siempre gana sobre
+   "user-agent" para declaraciones normales, sin importar especificidad), así
+   que el atributo HTML `hidden` dejaba de surtir efecto y esos elementos se
+   quedaban visibles aunque JS les pusiera `hidden = true`. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+  background: var(--bg-alt);
+  color: var(--ink);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand { display: flex; align-items: center; gap: 14px; }
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--red);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 15px;
+}
+
+.brand-text h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.brand-text h1 .flow { color: var(--red); }
+
+.brand-text p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.last-update {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-icon:hover { border-color: var(--red); color: var(--red); }
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 32px 60px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 3px solid var(--red);
+}
+
+.kpi-value { font-size: 26px; font-weight: 800; color: var(--ink); }
+.kpi-label { font-size: 12.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; }
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.field input, .field select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.field input:focus, .field select:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-soft);
+}
+
+.btn-primary, .btn-secondary {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s;
+}
+
+.btn-primary {
+  background: var(--red);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--red-dark); }
+.btn-primary:active { transform: translateY(1px); }
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+.btn-secondary:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.chart-wide { grid-column: 1 / -1; }
+
+.chart-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+
+.chart-card h2 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.status-line {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  margin-top: 20px;
+}
+
+footer {
+  text-align: center;
+  padding: 18px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.page-loader {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 1000;
+  transition: opacity 0.25s ease;
+}
+.page-loader.fade-out { opacity: 0; pointer-events: none; }
+
+.page-loader p {
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid var(--red-soft);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner-sm { width: 30px; height: 30px; border-width: 3px; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.charts-section { position: relative; }
+
+.charts-loader {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  border-radius: var(--radius);
+}
+
+.table-wrap { max-height: 420px; overflow-y: auto; overflow-x: auto; }
+
+#tabla-detalle {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+#tabla-detalle thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ink-soft);
+  border-bottom: 2px solid var(--red);
+}
+
+#tabla-detalle td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+#tabla-detalle tbody tr:hover { background: var(--red-soft); }
+
+#tabla-detalle td.num { text-align: right; font-variant-numeric: tabular-nums; }
+#tabla-detalle td.up { color: var(--red); font-weight: 600; }
+#tabla-detalle td.down { color: #1F7A4D; font-weight: 600; }
+
+.chart-wrap { position: relative; }
+
+.no-data {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  background: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 35, 40, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--bg);
+  border-radius: var(--radius);
+  max-width: 560px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 28px 30px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  border-top: 4px solid var(--red);
+}
+
+.modal h3 {
+  margin-top: 0;
+  color: var(--ink);
+}
+
+.modal p, .modal li { color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+.modal strong { color: var(--ink); }
+.modal ol { padding-left: 20px; }
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.modal-close:hover { color: var(--red); }
+
+@media (max-width: 860px) {
+  .charts { grid-template-columns: 1fr; }
+  .topbar { padding: 14px 18px; }
+  main { padding: 20px 18px 40px; }
+}

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AgroFlow CO — Precios Mayoristas SIPSA</title>
+<link rel="stylesheet" href="css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="page-loader" class="page-loader">
+    <div class="spinner"></div>
+    <p data-i18n="loader_text">Cargando AgroFlow CO…</p>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">AF</span>
+      <div class="brand-text">
+        <h1>Agro<span class="flow">Flow</span> CO</h1>
+        <p data-i18n="brand_tag">Precios mayoristas SIPSA-DANE</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div id="last-update" class="last-update">Cargando estado…</div>
+      <button id="btn-info" class="btn-icon" type="button" title="Información del proyecto">
+        <span aria-hidden="true">ⓘ</span> <span data-i18n="info_btn">Info</span>
+      </button>
+      <button id="btn-lang" class="btn-icon" type="button" title="Switch language">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="kpis" id="kpis">
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-observaciones">—</span>
+        <span class="kpi-label" data-i18n="kpi_observaciones">Observaciones</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-productos">—</span>
+        <span class="kpi-label" data-i18n="kpi_productos">Productos</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-ciudades">—</span>
+        <span class="kpi-label" data-i18n="kpi_ciudades">Ciudades</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value" id="kpi-precio">—</span>
+        <span class="kpi-label" data-i18n="kpi_precio">Precio promedio</span>
+      </div>
+    </section>
+
+    <section class="filters">
+      <div class="field">
+        <label for="f-producto" data-i18n="label_producto">Producto</label>
+        <input list="productos-list" id="f-producto" data-i18n-placeholder="placeholder_producto" placeholder="Ej: Papa, Tomate, Cebolla..." autocomplete="off" />
+        <datalist id="productos-list"></datalist>
+      </div>
+      <div class="field">
+        <label for="f-ciudad" data-i18n="label_ciudad">Ciudad</label>
+        <input list="ciudades-list" id="f-ciudad" data-i18n-placeholder="placeholder_ciudad" placeholder="Ej: Bogotá, Medellín..." autocomplete="off" />
+        <datalist id="ciudades-list"></datalist>
+      </div>
+      <div class="field">
+        <label for="f-desde" data-i18n="label_desde">Desde</label>
+        <input type="month" id="f-desde" />
+      </div>
+      <div class="field">
+        <label for="f-hasta" data-i18n="label_hasta">Hasta</label>
+        <input type="month" id="f-hasta" />
+      </div>
+      <div class="field">
+        <label for="f-fuente" data-i18n="label_fuente">Fuente</label>
+        <select id="f-fuente">
+          <option value="" data-i18n="opt_todas">Todas</option>
+        </select>
+      </div>
+      <button id="btn-buscar" class="btn-primary" data-i18n="btn_buscar">Buscar</button>
+      <button id="btn-limpiar" class="btn-secondary" data-i18n="btn_limpiar">Limpiar</button>
+    </section>
+
+    <section class="charts-section">
+    <div id="charts-loader" class="charts-loader" hidden>
+      <div class="spinner spinner-sm"></div>
+    </div>
+    <section class="charts">
+      <div class="chart-card chart-wide">
+        <h2 data-i18n="chart_evolucion">Evolución del precio promedio</h2>
+        <div class="chart-wrap">
+          <canvas id="chart-evolucion" height="110"></canvas>
+          <p class="no-data" id="no-data-evolucion" data-i18n="status_sin_datos" hidden>Sin datos para estos filtros</p>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h2 data-i18n="chart_departamento">Precio promedio por departamento</h2>
+        <div class="chart-wrap">
+          <canvas id="chart-departamento" height="140"></canvas>
+          <p class="no-data" id="no-data-departamento" data-i18n="status_sin_datos" hidden>Sin datos para estos filtros</p>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h2 data-i18n="chart_ciudad">Precio promedio por ciudad</h2>
+        <div class="chart-wrap">
+          <canvas id="chart-ciudad" height="140"></canvas>
+          <p class="no-data" id="no-data-ciudad" data-i18n="status_sin_datos" hidden>Sin datos para estos filtros</p>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h2 data-i18n="chart_volatiles">Productos más volátiles</h2>
+        <div class="chart-wrap">
+          <canvas id="chart-volatiles" height="140"></canvas>
+          <p class="no-data" id="no-data-volatiles" data-i18n="status_sin_datos" hidden>Sin datos para estos filtros</p>
+        </div>
+      </div>
+      <div class="chart-card chart-wide">
+        <h2 data-i18n="table_title">Detalle por producto y mercado</h2>
+        <div class="table-wrap">
+          <table id="tabla-detalle">
+            <thead>
+              <tr>
+                <th data-i18n="table_producto">Producto</th>
+                <th data-i18n="table_mercado">Mercado</th>
+                <th data-i18n="table_precio">Precio promedio</th>
+                <th data-i18n="table_variacion">Variación % promedio</th>
+                <th data-i18n="table_observaciones">Observaciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-detalle-body"></tbody>
+          </table>
+          <p class="no-data" id="no-data-tabla" data-i18n="status_sin_datos" hidden>Sin datos para estos filtros</p>
+        </div>
+      </div>
+    </section>
+    </section>
+
+    <p class="status-line" id="status-line"></p>
+  </main>
+
+  <footer>
+    <p data-i18n="footer_text">Datos: SIPSA-DANE · Pipeline AgroFlow-CO (Python) → PostgreSQL → esta vista web de solo lectura.</p>
+  </footer>
+
+  <div id="info-overlay" class="overlay">
+    <div class="modal">
+      <button id="btn-info-close" class="modal-close" type="button" aria-label="Cerrar">×</button>
+      <h3 data-i18n="info_title">¿Qué es AgroFlow CO?</h3>
+      <div data-i18n="info_body">
+        <p>AgroFlow CO es un pipeline de datos que automatiza la obtención, limpieza y
+        análisis de precios mayoristas agrícolas colombianos, publicados por el
+        <strong>SIPSA (Sistema de Información de Precios y Abastecimiento del Sector
+        Agropecuario)</strong> del DANE.</p>
+        <p><strong>Cómo funciona:</strong></p>
+        <ol>
+          <li>Un pipeline en Python consulta en vivo el servicio web (SOAP) oficial de SIPSA-DANE.</li>
+          <li>Los datos crudos se guardan sin modificar, luego se normalizan y validan (fechas, precios).</li>
+          <li>Se cargan en una base de datos PostgreSQL, evitando duplicados.</li>
+          <li>Esta página (y también un dashboard en Power BI) consulta esa base en <em>solo lectura</em> para mostrar las gráficas y filtros.</li>
+        </ol>
+        <p>Ningún dato mostrado aquí es inventado o simulado: todo proviene de consultas reales al servicio oficial de DANE.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
