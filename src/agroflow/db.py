@@ -66,6 +66,25 @@ UPSERT_SQL = text(
         source_updated_at = EXCLUDED.source_updated_at,
         raw_payload = EXCLUDED.raw_payload,
         loaded_at = NOW()
+    WHERE
+        -- SIPSA no tiene filtro de fecha: cada corrida reenvía TODO el
+        -- histórico, y casi nada de ese histórico cambia día a día. Sin
+        -- este WHERE, un UPDATE sin cambios reales igual escribe una fila
+        -- nueva (MVCC) y bloquea todos los índices en cada corrida — así
+        -- se infló la base hasta el límite de almacenamiento de Neon.
+        -- Comparando por valores (IS DISTINCT FROM, NULL-safe), una
+        -- re-extracción idéntica queda como no-op real.
+        (sipsa_price_observations.period_type, sipsa_price_observations.department,
+         sipsa_price_observations.city, sipsa_price_observations.market,
+         sipsa_price_observations.product_group, sipsa_price_observations.unit,
+         sipsa_price_observations.min_price, sipsa_price_observations.max_price,
+         sipsa_price_observations.average_price, sipsa_price_observations.source,
+         sipsa_price_observations.source_updated_at, sipsa_price_observations.raw_payload)
+        IS DISTINCT FROM
+        (EXCLUDED.period_type, EXCLUDED.department, EXCLUDED.city, EXCLUDED.market,
+         EXCLUDED.product_group, EXCLUDED.unit, EXCLUDED.min_price, EXCLUDED.max_price,
+         EXCLUDED.average_price, EXCLUDED.source, EXCLUDED.source_updated_at,
+         EXCLUDED.raw_payload)
     """
 )
 
