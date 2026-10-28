@@ -111,22 +111,26 @@ router.get("/resumen", async (req, res, next) => {
 });
 
 // GET /api/precios/serie?producto=&ciudad=&mercado=&departamento=&fuente=&desde=&hasta=
-// Serie mensual (precio_promedio, min, max, variacion_pct) para graficar evolución.
+// Serie mensual (un punto por mes) para graficar la evolución del precio.
+// Agrupa directo por mes (no por producto/mercado/ciudad/fuente): sin
+// filtros, agrupar también por esas dimensiones puede generar miles de
+// combinaciones por mes, y el LIMIT cortaba la serie en los primeros
+// meses antes de llegar a fechas recientes. Agrupando solo por mes, el
+// número de filas queda acotado por la cantidad de meses del rango (unas
+// pocas decenas), sin importar cuántos filtros se apliquen.
 router.get("/precios/serie", async (req, res, next) => {
   try {
     const { where, params } = buildFilters(req.query);
     const { rows } = await pool.query(
       `SELECT date_trunc('month', observation_date)::date AS mes,
-              source_system, product, market, city,
               AVG(average_price) AS precio_promedio,
               MIN(min_price) AS precio_minimo,
               MAX(max_price) AS precio_maximo,
               COUNT(*)::int AS num_observaciones
        FROM sipsa_price_observations
        ${where}
-       GROUP BY date_trunc('month', observation_date), source_system, product, market, city
-       ORDER BY mes
-       LIMIT 5000`,
+       GROUP BY date_trunc('month', observation_date)
+       ORDER BY mes`,
       params
     );
     res.json(rows);

@@ -181,11 +181,14 @@ def normalize_records(records: list[dict], operation: str) -> pd.DataFrame:
         ),
         axis=1,
     )
-    # Campos ausentes para una fuente (p.ej. city/department cuando la
-    # operación no los entrega) llegan aquí como NaN de pandas. Sin este
-    # paso, psycopg los serializa como NaN real (texto "NaN" en columnas
-    # TEXT, o el valor numérico especial NaN en columnas NUMERIC) en vez
-    # de NULL, contaminando agregaciones (AVG/MIN/MAX) y filtros.
+    # Mejor esfuerzo: reemplaza NaN por None en columnas mixtas (dtype
+    # object). No alcanza para una columna que para esta fuente es NaN
+    # en TODAS las filas (p.ej. city en promediosSipsaMesMadr): pandas
+    # la deja en dtype float64, que no puede contener None de Python, y
+    # lo vuelve a convertir en NaN silenciosamente. El saneo real y
+    # definitivo (que sí cubre ese caso) está en
+    # db.upsert_observations._nan_to_none, justo antes de escribir a la
+    # base — ahí ya son dicts de Python sueltos de cualquier dtype.
     out = out.where(pd.notnull(out), None)
     return out[UNIFIED_COLUMNS]
 

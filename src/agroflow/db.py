@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -52,14 +53,31 @@ UPSERT_SQL = text(
         :raw_payload
     )
     ON CONFLICT (natural_key) DO UPDATE SET
+        period_type = EXCLUDED.period_type,
+        department = EXCLUDED.department,
+        city = EXCLUDED.city,
+        market = EXCLUDED.market,
+        product_group = EXCLUDED.product_group,
+        unit = EXCLUDED.unit,
         min_price = EXCLUDED.min_price,
         max_price = EXCLUDED.max_price,
         average_price = EXCLUDED.average_price,
+        source = EXCLUDED.source,
         source_updated_at = EXCLUDED.source_updated_at,
         raw_payload = EXCLUDED.raw_payload,
         loaded_at = NOW()
     """
 )
+
+
+def _nan_to_none(value):
+    # pandas no puede guardar None en una columna float64 (lo reconvierte
+    # a NaN solo), así que ese saneo hay que hacerlo aquí, sobre dicts de
+    # Python ya sueltos de cualquier dtype de columna — es el único punto
+    # por el que pasan todas las escrituras a la base.
+    if isinstance(value, float) and math.isnan(value):
+        return None
+    return value
 
 
 def upsert_observations(rows: list[dict], raw_by_key: dict[str, dict] | None = None) -> int:
@@ -73,6 +91,7 @@ def upsert_observations(rows: list[dict], raw_by_key: dict[str, dict] | None = N
     engine = get_engine()
     payload = []
     for row in rows:
+        row = {k: _nan_to_none(v) for k, v in row.items()}
         raw = raw_by_key.get(row["natural_key"]) if raw_by_key else None
         payload.append({**row, "raw_payload": json.dumps(raw, ensure_ascii=False, default=str) if raw else None})
     with engine.begin() as conn:

@@ -112,17 +112,10 @@ async function loadEvolucion(params) {
     destroyChart("evolucion");
     return;
   }
-  const byMonth = new Map();
-  for (const row of data) {
-    const key = row.mes.slice(0, 10);
-    if (!byMonth.has(key)) byMonth.set(key, []);
-    byMonth.get(key).push(Number(row.precio_promedio));
-  }
-  const labels = [...byMonth.keys()].sort();
-  const values = labels.map((k) => {
-    const arr = byMonth.get(k);
-    return arr.reduce((a, b) => a + b, 0) / arr.length;
-  });
+  // La API ya entrega un punto por mes (GROUP BY solo por mes), no hace
+  // falta volver a agrupar en el cliente.
+  const labels = data.map((row) => row.mes.slice(0, 10));
+  const values = data.map((row) => Number(row.precio_promedio));
 
   destroyChart("evolucion");
   const ctx = document.getElementById("chart-evolucion");
