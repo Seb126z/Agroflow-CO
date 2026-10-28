@@ -116,7 +116,57 @@ Abre [http://localhost:3000](http://localhost:3000). La app web es de
 vuelve a tocar SIPSA. Ver [webapp/README.md](webapp/README.md) para el
 detalle de los endpoints.
 
-## 5) (Opcional) Dashboard en Power BI
+## 5) (Opcional) Publicar la web en internet, con actualización automática
+
+Esto requiere una base de datos alcanzable desde internet (tu PostgreSQL
+local no sirve: nadie fuera de tu red puede llegar a él). La base local
+completa (con todo el detalle crudo) pesa ~1.4 GB, más de lo que caben
+los planes gratuitos de verdad (Neon: 1 GB, sin vencimiento). Por eso
+esta parte usa una **copia liviana** sin la columna `raw_payload` (el
+JSON crudo por fila, que es lo que más pesa) — los datos de precios en
+sí quedan completos, solo se omite ese respaldo adicional.
+
+**a) Crear la base en la nube (una vez):**
+1. Crea una cuenta gratis en [neon.tech](https://neon.tech) y un proyecto nuevo.
+2. Copia el host, nombre de base, usuario y contraseña que te da (o el
+   connection string completo, del cual puedes sacar cada dato).
+3. Localmente, con esos datos, aplica el esquema y haz la primera carga:
+   ```bash
+   $env:POSTGRES_HOST = "<host-de-neon>"
+   $env:POSTGRES_DB = "<tu-base-en-neon>"
+   $env:POSTGRES_USER = "<tu-usuario-en-neon>"
+   $env:POSTGRES_PASSWORD = "<tu-password-en-neon>"
+   $env:POSTGRES_SSLMODE = "require"
+   python -m src.agroflow.cli init-db
+   python -m src.agroflow.cli extract --all --no-raw-payload
+   ```
+
+**b) Que se mantenga actualizada sola:** el workflow
+[.github/workflows/sync-cloud-db.yml](.github/workflows/sync-cloud-db.yml)
+ya está listo — corre `extract --all --no-raw-payload` contra esa base
+todos los días, sin depender de ninguna PC prendida. Solo falta
+registrar las credenciales como *secrets* del repo en GitHub:
+**Settings → Secrets and variables → Actions → New repository secret**:
+`CLOUD_POSTGRES_HOST`, `CLOUD_POSTGRES_DB`, `CLOUD_POSTGRES_USER`,
+`CLOUD_POSTGRES_PASSWORD`. También puedes lanzarlo a mano desde la
+pestaña **Actions** del repo (botón "Run workflow").
+
+**c) Publicar la web (que se redespliega sola en cada push):**
+1. Crea una cuenta gratis en [render.com](https://render.com) y conecta
+   tu repositorio de GitHub.
+2. Render detecta [render.yaml](render.yaml) solo y propone crear el
+   servicio ya configurado (carpeta `webapp/`, `npm install` + `npm start`).
+3. Te pedirá completar a mano las variables marcadas como secretas:
+   `POSTGRES_HOST`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+   — los mismos valores de Neon del paso (a).
+4. Listo: cada `git push` a `main` redespliega la web sola, y el
+   workflow de GitHub Actions mantiene los datos al día por su cuenta.
+
+El plan gratis de Render "duerme" el servicio tras 15 minutos sin
+visitas y tarda ~1 minuto en despertar con la primera visita — normal
+en un plan gratuito, no es un error.
+
+## 6) (Opcional) Dashboard en Power BI
 
 Si tienes [Power BI Desktop](https://www.microsoft.com/download/details.aspx?id=58494)
 instalado, puedes abrir `dashboard.pbix` y reemplazar su origen de datos

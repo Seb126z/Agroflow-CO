@@ -1,0 +1,43 @@
+name: Sync cloud database
+
+# Corre el pipeline de extracción directo contra la base en la nube
+# (Neon/Supabase/etc.) que alimenta la web pública — sin depender de que
+# ninguna PC esté prendida. No toca la base local de nadie: usa las
+# credenciales de la base en la nube guardadas como secrets del repo.
+#
+# Configurar una vez en GitHub: Settings → Secrets and variables →
+# Actions → New repository secret:
+#   CLOUD_POSTGRES_HOST, CLOUD_POSTGRES_DB, CLOUD_POSTGRES_USER,
+#   CLOUD_POSTGRES_PASSWORD (el host/db/user/password que te da Neon)
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # todos los días 09:00 UTC (~04:00 hora Colombia)
+  workflow_dispatch: {} # también se puede lanzar manualmente desde la pestaña Actions
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      POSTGRES_HOST: ${{ secrets.CLOUD_POSTGRES_HOST }}
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${{ secrets.CLOUD_POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.CLOUD_POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.CLOUD_POSTGRES_PASSWORD }}
+      POSTGRES_SSLMODE: require
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Crear/actualizar esquema
+        run: python -m src.agroflow.cli init-db
+
+      - name: Extraer y cargar (sin raw_payload, copia liviana)
+        run: python -m src.agroflow.cli extract --all --no-raw-payload

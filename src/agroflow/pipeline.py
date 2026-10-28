@@ -42,6 +42,7 @@ def run_source(
     *,
     max_rows: int | None = None,
     persist: bool = True,
+    store_raw_payload: bool = True,
 ) -> dict:
     """Ejecuta el pipeline completo para una operación SIPSA.
 
@@ -50,6 +51,11 @@ def run_source(
     filas y por eso la corrida queda marcada como incompleta.
     `persist=False` permite probar extracción+transformación sin tocar
     la base de datos (p.ej. si Postgres no está disponible).
+    `store_raw_payload=False` omite guardar el registro crudo en la
+    columna `raw_payload` (queda NULL): pensado para la copia "liviana"
+    en la nube que alimenta la web pública, donde ese JSON por fila es
+    el principal responsable del tamaño en disco y no hace falta (la
+    copia local completa, con todo el crudo, sigue intacta).
     """
     if operation not in SOURCE_SPECS:
         raise ValueError(f"Operación no soportada: {operation}. Usar una de {list(SOURCE_SPECS)}")
@@ -70,13 +76,16 @@ def run_source(
         rows_valid = len(df)
 
         if persist:
-            # `df.index` conserva la posición original de cada fila dentro
-            # de `result.rows` (validate() sólo descarta filas, no reindexa),
-            # así que se puede recuperar el crudo exacto de cada registro.
-            raw_by_key = {
-                df.loc[idx, "natural_key"]: result.rows[idx]
-                for idx in df.index
-            }
+            raw_by_key = None
+            if store_raw_payload:
+                # `df.index` conserva la posición original de cada fila
+                # dentro de `result.rows` (validate() sólo descarta filas,
+                # no reindexa), así que se puede recuperar el crudo exacto
+                # de cada registro.
+                raw_by_key = {
+                    df.loc[idx, "natural_key"]: result.rows[idx]
+                    for idx in df.index
+                }
             rows_loaded = db.upsert_observations(df.to_dict("records"), raw_by_key)
         else:
             rows_loaded = 0
@@ -111,5 +120,10 @@ def run_source(
     return run_record
 
 
-def run_all(*, max_rows: int | None = None, persist: bool = True) -> list[dict]:
-    return [run_source(op, max_rows=max_rows, persist=persist) for op in SOURCE_SPECS]
+def run_all(
+    *, max_rows: int | None = None, persist: bool = True, store_raw_payload: bool = True
+) -> list[dict]:
+    return [
+        run_source(op, max_rows=max_rows, persist=persist, store_raw_payload=store_raw_payload)
+        for op in SOURCE_SPECS
+    ]

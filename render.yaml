@@ -1,0 +1,25 @@
+# Blueprint de Render (https://render.com/docs/blueprint-spec).
+# Al conectar este repo en Render, detecta este archivo solo y propone
+# crear el servicio ya configurado. Las variables marcadas sync:false
+# se piden a mano en el dashboard de Render (no viven en el repo).
+services:
+  - type: web
+    name: agroflow-co-web
+    runtime: node
+    rootDir: webapp
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_PORT
+        value: "5432"
+      - key: POSTGRES_DB
+        sync: false
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_SSLMODE
+        value: require

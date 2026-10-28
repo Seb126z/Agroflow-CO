@@ -21,9 +21,10 @@ def get_engine() -> Engine:
             f"postgresql+psycopg://{settings.postgres_user}:{settings.postgres_password}"
             f"@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
         )
-        _engine = create_engine(
-            url, pool_pre_ping=True, connect_args={"connect_timeout": 10}
-        )
+        connect_args = {"connect_timeout": 10}
+        if settings.postgres_sslmode:
+            connect_args["sslmode"] = settings.postgres_sslmode
+        _engine = create_engine(url, pool_pre_ping=True, connect_args=connect_args)
     return _engine
 
 

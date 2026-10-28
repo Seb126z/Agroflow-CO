@@ -53,7 +53,10 @@ def cmd_extract(args: argparse.Namespace) -> int:
     exit_code = 0
     for source in sources:
         record = pipeline.run_source(
-            source, max_rows=args.max_rows, persist=not args.no_persist
+            source,
+            max_rows=args.max_rows,
+            persist=not args.no_persist,
+            store_raw_payload=not args.no_raw_payload,
         )
         print(
             f"[{record['status']}] {source}: recibidas={record['rows_received']} "
@@ -119,6 +122,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_extract.add_argument(
         "--no-persist", action="store_true",
         help="No escribir en PostgreSQL (solo extraer y normalizar, útil sin DB disponible)",
+    )
+    p_extract.add_argument(
+        "--no-raw-payload", action="store_true",
+        help="No guardar el JSON crudo por fila (columna raw_payload queda NULL); "
+             "pensado para la copia liviana en la nube que alimenta la web pública",
     )
     p_extract.set_defaults(func=cmd_extract)
 

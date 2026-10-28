@@ -14,5 +14,8 @@ class Settings:
     postgres_db: str = os.getenv("POSTGRES_DB", "agroflow")
     postgres_user: str = os.getenv("POSTGRES_USER", "agroflow")
     postgres_password: str = os.getenv("POSTGRES_PASSWORD", "agroflow_dev")
+    # Vacío para Postgres local; "require" para proveedores en la nube
+    # como Neon/Supabase, que exigen conexión cifrada.
+    postgres_sslmode: str = os.getenv("POSTGRES_SSLMODE", "")
 
 settings = Settings()

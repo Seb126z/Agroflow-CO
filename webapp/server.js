@@ -4,7 +4,10 @@ const apiRouter = require("./src/routes");
 const { pool } = require("./src/db");
 
 const app = express();
-const PORT = process.env.WEBAPP_PORT || 3000;
+// Render (y la mayoría de plataformas de hosting) inyecta PORT y exige
+// que el servidor escuche justo ahí; WEBAPP_PORT es solo para correrlo
+// en un puerto fijo en local si 3000 ya está ocupado.
+const PORT = process.env.PORT || process.env.WEBAPP_PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/api", apiRouter);
